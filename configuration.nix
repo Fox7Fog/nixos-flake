@@ -27,11 +27,13 @@
   networking.hostName = "F7F";
 
   # Mount other partitions if needed.
-  #fileSystems."/home/fox7fog/.dotFiles" = { # The Directory to Mount the Partition.
-  #  device = ""; # The Partition is Added Here, examples: "/dev/nvme1n1p1" or "nvme0n1p2" or "sda1".
-  #  fsType = ""; # The File System Here, examples: "ntfs", "btrfs", "ext4".
-  #  options = [ "rw" "uid=1000" "gid=100" "umask=0022" ]; # uid and gid can be checked by running the 'id' command
-  #};
+  /*
+  fileSystems."/home/fox7fog/.dotFiles" = { # The Directory to Mount the Partition.
+    device = ""; # The Partition is Added Here, examples: "/dev/nvme1n1p1" or "nvme0n1p2" or "sda1".
+    fsType = ""; # The File System Here, examples: "ntfs", "btrfs", "ext4".
+    options = [ "rw" "uid=1000" "gid=100" "umask=0022" ]; # uid and gid can be checked by running the 'id' command
+  };
+  */
 
   # Enable networking
   networking.networkmanager.enable = true;
