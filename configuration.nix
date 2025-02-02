@@ -6,9 +6,22 @@
       ./hardware-configuration.nix
     ];
 
-  # Bootloader.
-  boot.loader.systemd-boot.enable = true;
-  boot.loader.efi.canTouchEfiVariables = true;
+  # Bootloader. 
+  boot = {
+    loader = {
+      systemd-boot.enable = true;
+      efi.canTouchEfiVariables = true;
+    };
+    /*
+    kernelParams = [
+      # Framebuffer and memory settings
+      "i915.stolenmem=64M" # Testing...
+      "i915.gtt_size=2048" # Testing...
+    ];
+    initrd.kernelModules = [ "i915" ]; # Testing...
+    kernelPackages = pkgs.linuxPackages_latest; # Testing...
+    */
+  };
 
   # Define network hostname.
   networking.hostName = "F7F";
@@ -47,40 +60,32 @@
     useXkbConfig = true;
   };
 
-  # Enable the X11 Windowing System
+  # Enable the X11 windowing system.
   services.xserver = {
-    # Enable X11.
     enable = true;
-    # Configure keymap in X11.
-    xkb.layout = "us";
-    xkb.variant = "altgr-intl";
-    # Enable X11 Nvidia Drivers.
-    videoDrivers = [ "nvidia" ];
-    # Enable LightDM.
-    #displayManager = {
-    #  lightdm.enable = true;
-    #};
-    # Enable i3 Window Manager.
+    desktopManager = {
+      xfce.enable = true;
+      xfce.noDesktop = true;
+    };
+    # Enable i3 Window Manager in X11
     windowManager.i3 = {
       enable = true;
       extraPackages = with pkgs; [
-          i3status
-          i3status-rust
-          dmenu
-          dunst
-          feh
-          xfce.thunar
-          xfce.thunar-volman
-          xfce.thunar-bare
-          xfce.thunar-dropbox-plugin
-          xfce.thunar-archive-plugin
-          xfce.thunar-media-tags-plugin
-          lxappearance
-          volumeicon
-          arc-theme
-          cosmic-icons
+        dmenu
+        i3status
+        picom
+        lxappearance
+        i3status-rust
+        arc-theme
+        feh
       ];
     };
+    # Configure keymap in X11
+    xkb = {
+      layout = "us";
+      variant = "";
+    };
+    displayManager.lightdm.greeters.slick.enable = false;
   };
 
   # Enable SDDM display manager for Hyprland.
@@ -93,25 +98,23 @@
   hardware.cpu.intel.updateMicrocode = true;
 
   # Set the CPU Governor to Performance
-  powerManagement.cpuFreqGovernor = "performance";
+  # powerManagement.cpuFreqGovernor = "performance";
 
   # Hardware Related Configuration.
   hardware = {
     # Graphics OpenGL Rendering.
-    opengl = {
+    graphics = {
       enable = true;
-      driSupport = true;
-      driSupport32Bit = true;
     };
     # NVidia Graphics.
-    nvidia = {
+    /* nvidia = {
       modesetting.enable = true;
       prime = {
         offload.enable = true;
         intelBusId = "PCI:0:2:0";
         nvidiaBusId = "PCI:1:0:0";
       };
-    };
+    }; */
     # Enable Bluetooth.
     bluetooth = {
       enable = true;
@@ -133,7 +136,6 @@
   sound.enable = true;
   services.pipewire = {
     enable = true;
-    audio.enable = true;
     alsa.enable = true;
     alsa.support32Bit = true;
     pulse.enable = true;
@@ -144,7 +146,6 @@
   # Nix Packages Configuration.
   nixpkgs.config = {
     allowUnfree = true; # Enable Unfree Packages Support.
-    cudaSupport = true; # Enable NVidia Cuda Support.
   };
 
   # User Account Configuration.
@@ -152,7 +153,9 @@
     isNormalUser = true;
     description = "F7F";
     extraGroups = [ "networkmanager" "whell" ];
-    packages = with pkgs; [];
+    # shell = pkgs.zsh;
+    # openssh.authorizedKeys.keys [ "" ];
+    # 
   };
 
   # List Environment System Wide Packages.
@@ -181,14 +184,93 @@
     oh-my-zsh
   ];
 
+  fonts.packages = with pkgs; [
+    noto-fonts
+    noto-fonts-cjk-sans
+    noto-fonts-emoji
+    liberation_ttf
+    fira-code
+    fira-code-symbols
+    mplus-outline-fonts.githubRelease
+    dina-font
+    proggyfonts
+    nerdfonts
+    font-awesome
+    ubuntu_font_family
+    jetbrains-mono
+    terminus_font
+  ];
+
   # System Shell Packages.
   environment.shells = with pkgs; [
     zsh
   ];
+  
+  programs = {
+    # My Traceroute (MTR)
+    mtr.enable = true;
+    # GNU Privacy Guard (GnuPG)
+    gnupg.agent = {
+      enable = true;
+      enableSSHSupport = true;
+    };
+    # Sway
+    sway = {
+      enable = true;
+      wrapperFeatures.gtk = true;
+      xwayland.enable = true;
+    };
+    hyprland = {
+      enable = true;
+      xwayland.enable = true;
+    };
+    zsh = {
+      enable = true;
+      ohMyZsh = {
+        enable = true;
+	      theme = "jonathan";
+	      plugins = [
+          "git"
+	        # "zsh-autosuggestions"
+	        # "zsh-syntax-highlighting"
+	      ];
+      };
+    };
+  };
+
+  # Environment variables for Wayland
+  /* environment.sessionVariables = {
+    NIXOS_OZONE_WL = "1";
+    QT_QPA_PLATFORM = "wayland";
+    GDK_BACKEND = "wayland";
+  }; */
 
   # Enable Nix Extra Features.
   nix.settings = {
     experimental-features = [ "nix-command" "flakes" ];
+  };
+
+  # List services that you want to enable:
+  services = {
+    # Enable the OpenSSH daemon
+    openssh.enable = true;
+    picom = {
+      enable = true;
+      settings = {
+        inactive-opacity = 1;
+        active-opacity = 1;
+        inactive-opacity-override = true;
+        blur-backgroun = true;
+        blur-strenght = 1;
+        opacity-rule = [];
+      };
+    };
+    # dbus.enable = true;
+    seatd.enable = true;
+    # Ollama
+    ollama.enable = true;
+    # Mullvad VPN
+    #  mullvad-vpn.enable = true;
   };
 
   # NixOS Release for This Configuration.
