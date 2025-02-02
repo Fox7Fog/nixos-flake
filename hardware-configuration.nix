@@ -13,26 +13,28 @@
   boot.kernelModules = [ "kvm-intel" ];
   boot.extraModulePackages = [ ];
 
-# To be tested for btrfs:
-#  boot.kernel.sysctl = {
-#    "vm.swappiness" = 90;
-#    "vm.vfs_cache_pressure" = 50;
-#    "vm.dirty_background_ratio" = 2;
-#    "vm.dirty_ratio" = 5;
-#  };
-#  services.btrfs.autoScrub = {
-#    enable = true;
-#    interval = "weekly";
-#  };
-  
+ # To be tested for btrfs:
+  /*
+  boot.kernel.sysctl = {
+    "vm.swappiness" = 90;
+    "vm.vfs_cache_pressure" = 50;
+    "vm.dirty_background_ratio" = 2;
+    "vm.dirty_ratio" = 5;
+  };
+  services.btrfs.autoScrub = {
+    enable = true;
+    interval = "weekly";
+  };
+  */
+
   fileSystems."/" =
-    { device = "/dev/disk/by-label/nix-root"; # by-uuid/b1c44ee9-ea73-4030-850b-0e6359e16522
+    { device = "/dev/disk/by-label/NIXROOT";
       fsType = "btrfs";
       options = [ "noatime,compress-force=zstd:2,discard=async,commit=120,clear_cache,space_cache=v2,subvol=@" ];
     };
 
   fileSystems."/boot" =
-    { device = "/dev/disk/by-label/nix-boot"; # by-uuid/A4D4-E985
+    { device = "/dev/disk/by-label/NIXBOOT";
       fsType = "vfat";
       options = [ "fmask=0077" "dmask=0077" ];
     };
