@@ -93,9 +93,6 @@
   # Enable SDDM display manager for Hyprland.
   services.displayManager.sddm.enable = true;
 
-  # Enable Hyprland.
-  programs.hyprland.enable = true;
-
   # Enable Microcode Updates for Intel CPUs.
   hardware.cpu.intel.updateMicrocode = true;
 
