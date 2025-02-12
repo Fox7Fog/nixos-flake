@@ -150,7 +150,7 @@
   users.users.fox7fog = {
     isNormalUser = true;
     description = "F7F";
-    extraGroups = [ "networkmanager" "whell" ];
+    extraGroups = [ "networkmanager" "wheel" ];
     # shell = pkgs.zsh;
     # openssh.authorizedKeys.keys [ "" ];
     # 
