@@ -58,7 +58,7 @@
   # Set fonts for TTY
   console = {
     earlySetup = true;
-    font = "Lat2-Terminus16";
+    font = "sun12x22";
     useXkbConfig = true;
   };
 
