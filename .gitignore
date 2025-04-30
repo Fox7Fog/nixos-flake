@@ -1,0 +1,12 @@
+# Nix build outputs
+result
+result-*
+
+# Editor/IDE specific files
+.vscode/
+.idea/
+*.swp
+*~
+
+# System files
+.DS_Store 

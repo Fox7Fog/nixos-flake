@@ -1,8 +1,14 @@
 { config, pkgs, inputs, ... }:
 
 {
-  imports = [ inputs.hyprland.homeManagerModules.default ];
+  # Import Hyprland's Home Manager module if needed for specific settings.
+  imports = [ 
+    inputs.hyprland.homeManagerModules.default
+    ./modules/hyprland/config.nix
+    ./modules/desktop-apps
+  ];
 
+  # Basic Home Manager settings.
   home.username = "fox7fog";
   home.homeDirectory = "/home/fox7fog";
 
@@ -34,34 +40,49 @@
   };
   */
 
-  # Packages that should be installed to the user profile.
+  # --- User Packages --- 
+  # List of packages installed specifically for this user.
   home.packages = with pkgs; [
-    neofetch
-    nnn # terminal file manager
+    # Browsers
+    qutebrowser
+    links2
+    chromium
+    
+    # File manager
+    yazi
+    
+    # System utilities
+    # Laptop-specific utilities
+    /*
+    brightnessctl # Control screen brightness
+    v4l-utils     # Video4Linux tools (webcams, etc.)
+    */
+    neofetch      # System info display
+    thefuck       # Corrects previous console command errors
 
-    # archives
+    # Archives
     zip
     xz
     unzip
     p7zip
 
-    # utils
-    ripgrep # recursively searches directories for a regex pattern
-    jq # A lightweight and flexible command-line JSON processor
-    yq-go # yaml processor https://github.com/mikefarah/yq
-    fzf # A command-line fuzzy finder
+    # Command-line Utilities
+    ripgrep # Fast recursive grep
+    jq      # JSON processor
+    yq-go   # YAML processor
+    fzf     # Fuzzy finder
 
-    # networking tools
-    mtr # A network diagnostic tool
+    # Networking Tools
+    mtr     # Network diagnostic tool
     iperf3
-    dnsutils  # "dig" + "nslookup"
-    ldns # replacement of "dig", it provide the command "drill"
-    aria2 # A lightweight multi-protocol & multi-source command-line download utility
-    socat # replacement of openbsd-netcat
-    nmap # A utility for network discovery and security auditing
-    ipcalc  # it is a calculator for the IPv4/v6 addresses
+    dnsutils  # dig, nslookup
+    ldns      # drill (alternative to dig)
+    aria2     # Download utility
+    socat     # netcat alternative
+    nmap      # Network scanner
+    ipcalc    # IP calculator
 
-    # misc
+    # Miscellaneous
     cowsay
     file
     which
@@ -71,41 +92,42 @@
     gawk
     zstd
     gnupg
+    nix-output-monitor # Enhanced Nix command output
 
-    nix-output-monitor # Nix related command "nom" that works just like "nix" but with more details
+    # Productivity
+    hugo # Static site generator
+    glow # Markdown previewer
 
-    # productivity
-    hugo # static site generator
-    glow # markdown previewer in terminal
+    # System Monitoring
+    btop  # Resource monitor
+    iotop # I/O monitor
+    iftop # Network traffic monitor
 
-    btop  # replacement of htop/nmon
-    iotop # io monitoring
-    iftop # network monitoring
+    # System Call Monitoring
+    strace # System call tracer
+    ltrace # Library call tracer
+    lsof   # List open files
 
-    # system call monitoring
-    strace # system call monitoring
-    ltrace # library call monitoring
-    lsof # list open files
-
-    # system tools
+    # System Tools
     sysstat
-    lm_sensors # for "sensors" command
+    lm_sensors # Hardware sensors
     ethtool
     pciutils # lspci
     usbutils # lsusb
   ];
 
-  # Basic Git configuration
+  # --- Program Configurations --- 
+
+  # Git
   programs.git = {
     enable = true;
     userName = "Fox7Fog";
     userEmail = "fox7fog@protonmail.com";
   };
 
-  # starship - an customizable prompt for any shell
+  # Starship prompt
   programs.starship = {
     enable = true;
-    # custom settings
     settings = {
       add_newline = false;
       aws.disabled = true;
@@ -114,10 +136,9 @@
     };
   };
 
-  # alacritty - a cross-platform, GPU-accelerated terminal emulator
+  # Alacritty terminal emulator
   programs.alacritty = {
     enable = true;
-    # custom settings
     settings = {
       env.TERM = "xterm-256color";
       font = {
@@ -129,20 +150,74 @@
     };
   };
 
-  programs.bash = {
+  # Zsh shell configuration
+  programs.zsh = {
     enable = true;
-    enableCompletion = true;
-    # TODO add your custom bashrc here
-    bashrcExtra = ''
-      export PATH="$PATH:$HOME/bin:$HOME/.local/bin:$HOME/go/bin"
-    '';
-
-    # set some aliases, feel free to add more or remove some
-    shellAliases = {
-      k = "kubectl";
-      urldecode = "python3 -c 'import sys, urllib.parse as ul; print(ul.unquote_plus(sys.stdin.read()))'";
-      urlencode = "python3 -c 'import sys, urllib.parse as ul; print(ul.quote_plus(sys.stdin.read()))'";
+    ohMyZsh = {
+      enable = true;
+      theme = "jonathan";
+      plugins = [
+        "git"
+        "zsh-autosuggestions"
+        "zsh-syntax-highlighting"
+      ];
     };
+    
+    shellAliases = {
+      # System management
+      rebuild = "sudo nixos-rebuild switch --flake /etc/nixos#F7F";
+      update = "sudo nix flake update /etc/nixos";
+      clean = "sudo nix-collect-garbage -d";
+      
+      # Git shortcuts
+      gs = "git status";
+      ga = "git add";
+      gc = "git commit";
+      gp = "git push";
+      gl = "git pull";
+      
+      # Directory navigation
+      ".." = "cd ..";
+      "..." = "cd ../..";
+      "...." = "cd ../../..";
+      
+      # List directory contents
+      ll = "ls -lah";
+      la = "ls -A";
+      l = "ls -CF";
+      
+      # System monitoring
+      ports = "sudo lsof -i -P -n | grep LISTEN";
+      mem = "free -h";
+      cpu = "top -o %CPU";
+      
+      # Quick edit for configuration
+      conf = "cd /etc/nixos";
+      hm = "$EDITOR /etc/nixos/home.nix";
+    };
+    
+    sessionVariables = {
+      EDITOR = "nvim";
+      VISUAL = "nvim";
+      PAGER = "less";
+      MANPAGER = "less -R --use-color -Dd+r -Du+b";
+    };
+    
+    initExtra = ''
+      # Set history size
+      HISTSIZE=10000
+      SAVEHIST=10000
+      
+      # Additional key bindings
+      bindkey '^[[A' history-substring-search-up
+      bindkey '^[[B' history-substring-search-down
+      
+      # Custom functions
+      mkcd() { mkdir -p "$@" && cd "$@"; }
+      
+      # Welcome message
+      echo "Welcome back! Remember to check for updates with 'update'."
+    '';
   };
 
   /*
@@ -157,6 +232,6 @@
   */
   home.stateVersion = "24.11";
 
-  # Let home Manager install and manage itself.
+  # Allow Home Manager to manage itself.
   programs.home-manager.enable = true;
 }

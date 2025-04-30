@@ -1,48 +1,38 @@
 { config, pkgs, ... }:
 
 {
-  imports =
-    [
-      ./hardware-configuration.nix
-    ];
+  imports = [
+    # Hardware-specific settings
+    ./hardware-configuration.nix
+    # Our modular configurations
+    ./modules/desktop.nix
+    ./modules/security.nix
+    ./modules/hardware.nix
+  ];
 
-  # Bootloader. 
+  # --- Bootloader Configuration --- 
   boot = {
     loader = {
+      # Using systemd-boot for EFI systems.
       systemd-boot.enable = true;
-      efi.canTouchEfiVariables = true;
+      efi.canTouchEfiVariables = true; # Needed for boot entry management.
     };
-    /*
-    kernelParams = [
-      # Framebuffer and memory settings
-      "i915.stolenmem=64M" # Testing...
-      "i915.gtt_size=2048" # Testing...
-    ];
-    initrd.kernelModules = [ "i915" ]; # Testing...
-    kernelPackages = pkgs.linuxPackages_latest; # Testing...
-    */
   };
 
-  # Define network hostname.
+  # --- Networking --- 
+  # Sets the hostname for the machine.
   networking.hostName = "F7F";
-
-  # Mount other partitions if needed.
-  /*
-  fileSystems."/home/fox7fog/.dotFiles" = { # The Directory to Mount the Partition.
-    device = ""; # The Partition is Added Here, examples: "/dev/nvme1n1p1" or "nvme0n1p2" or "sda1".
-    fsType = ""; # The File System Here, examples: "ntfs", "btrfs", "ext4".
-    options = [ "rw" "uid=1000" "gid=100" "umask=0022" ]; # uid and gid can be checked by running the 'id' command
-  };
-  */
-
-  # Enable networking
+  # Use NetworkManager for managing network connections (WiFi, Ethernet).
   networking.networkmanager.enable = true;
+  # Explicitly enable the system firewall.
+  networking.firewall.enable = true;
 
-  # Configure the Time Zone.
+  # --- Localization --- 
+  # Set the system time zone.
   time.timeZone = "America/Sao_Paulo";
-
-  # Select Locale Properties.
+  # Default language and formats.
   i18n.defaultLocale = "en_US.UTF-8";
+  # Finer-grained settings for specific locale categories.
   i18n.extraLocaleSettings = {
     LC_ADDRESS = "en_GB.UTF-8";
     LC_IDENTIFICATION = "en_GB.UTF-8";
@@ -55,133 +45,133 @@
     LC_TIME = "en_GB.UTF-8";
   };
 
-  # Set fonts for TTY
+  # --- Console Setup --- 
+  # Settings for the virtual console (TTY).
   console = {
     earlySetup = true;
-    font = "sun12x22";
-    useXkbConfig = true;
+    font = "sun12x22"; # A readable font for the TTY.
+    useXkbConfig = true; # Use X11 keymap settings in TTY.
   };
 
-  # Enable the X11 windowing system.
+  # --- Graphics and Display --- 
+  # Enable the X.Org server (needed for i3).
   services.xserver = {
     enable = true;
-    desktopManager = {
-      xfce.enable = true;
-      xfce.noDesktop = true;
-    };
-    # Enable i3 Window Manager in X11
+    # Enable the i3 tiling window manager.
     windowManager.i3 = {
       enable = true;
+      # Additional packages useful for the i3 environment.
       extraPackages = with pkgs; [
-        dmenu
-        i3status
-        picom
-        lxappearance
-        i3status-rust
-        arc-theme
-        feh
+        dmenu # Application launcher
+        i3status # Basic status bar
+        picom # Compositor for effects (transparency, etc.)
+        lxappearance # GTK theme switcher
+        i3status-rust # More advanced status bar
+        arc-theme # GTK theme
+        feh # Wallpaper setter
       ];
     };
-    # Configure keymap in X11
+    # Basic X11 keyboard layout.
     xkb = {
       layout = "us";
       variant = "";
     };
+    # Disable the default LightDM GTK greeter if using SDDM.
     displayManager.lightdm.greeters.slick.enable = false;
   };
 
-  # Enable SDDM display manager for Hyprland.
+  # Enable the SDDM display manager (login screen), often used with Wayland.
   services.displayManager.sddm.enable = true;
+  # Enable Hyprland Wayland compositor.
+  programs.hyprland = {
+    enable = true;
+    xwayland.enable = true; # For running X11 apps in Wayland.
+  };
 
-  # Enable Microcode Updates for Intel CPUs.
+  # --- Hardware Settings --- 
+  # Apply CPU microcode updates.
   hardware.cpu.intel.updateMicrocode = true;
-
-  # Set the CPU Governor to Performance
+  # Set the CPU Governor to Performance (Commented out - consider power usage)
   # powerManagement.cpuFreqGovernor = "performance";
-
-  # Hardware Related Configuration.
   hardware = {
-    # Graphics OpenGL Rendering.
+    # Enable OpenGL support.
     graphics = {
       enable = true;
     };
-    # NVidia Graphics.
-    /* nvidia = {
-      modesetting.enable = true;
-      prime = {
-        offload.enable = true;
-        intelBusId = "PCI:0:2:0";
-        nvidiaBusId = "PCI:1:0:0";
-      };
-    }; */
-    # Enable Bluetooth.
+    # Enable Bluetooth support.
     bluetooth = {
       enable = true;
-      powerOnBoot = true;
+      powerOnBoot = true; # Turn on Bluetooth automatically.
     };
-    # Disable PulseAudio to use PipeWire.
+    # Use PipeWire for audio, so disable PulseAudio.
     pulseaudio.enable = false;
+    
+    # Laptop-specific hardware settings
+    /*
+    acpilight.enable = true;  # Backlight control
+    power-management = {
+      enable = true;
+      powertop.enable = true;
+    };
+    */
   };
 
-  # Security.
+  # --- Security Settings --- 
   security = {
-    # Polkit is used for controlling system-wide privileges.
+    # Polkit for managing privileges (e.g., mounting drives).
     polkit.enable = true;
-    # Realtime Policy and Watchdog Daemon.
+    # RealtimeKit for low-latency audio/scheduling.
     rtkit.enable = true;
   };
 
-  # Enable Sound with PipeWire.
+  # --- Audio Setup --- 
+  # Enable PipeWire for managing audio streams.
   services.pipewire = {
     enable = true;
-    alsa.enable = true;
-    alsa.support32Bit = true;
-    pulse.enable = true;
-    jack.enable = true;
-    wireplumber.enable = true;
+    alsa.enable = true; # ALSA compatibility.
+    alsa.support32Bit = true; # For 32-bit ALSA apps.
+    pulse.enable = true; # PulseAudio compatibility layer.
+    jack.enable = true; # JACK compatibility.
+    wireplumber.enable = true; # Session manager for PipeWire.
   };
 
-  # Nix Packages Configuration.
+  # --- Nix Configuration --- 
+  # Allow installation of packages with non-free licenses.
   nixpkgs.config = {
-    allowUnfree = true; # Enable Unfree Packages Support.
+    allowUnfree = true;
+  };
+  # Enable experimental Nix features like flakes and the new CLI.
+  nix.settings = {
+    experimental-features = [ "nix-command" "flakes" ];
   };
 
-  # User Account Configuration.
+  # --- User Account --- 
   users.users.fox7fog = {
     isNormalUser = true;
     description = "F7F";
+    # Add user to groups needed for system access (networking, admin).
     extraGroups = [ "networkmanager" "wheel" ];
-    # shell = pkgs.zsh;
-    # openssh.authorizedKeys.keys [ "" ];
-    # 
+    # Set the default shell for this user (managed by Home Manager too).
+    shell = pkgs.zsh;
+    # Example for SSH keys:
+    # openssh.authorizedKeys.keys = [ "ssh-rsa AAA... user@host" ];
+    openssh.authorizedKeys.keys = [ "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIBrjJv42A3N720HbDWzUTKwL7ZbMua0mS60IFabYbQ1j fox7fog@protonmail.com" ];
   };
 
-  # List Environment System Wide Packages.
-  environment.systemPackages = with pkgs; [
-    # Web Browsers.
-    firefox-esr
-    qutebrowser
-    w3m
-    links2
-    lynx
-    chromium
-    microsoft-edge
-    # System Tools.
-    brightnessctl
-    v4l-utils
-    wget
-    git
-    alsa-utils
-    # Terminal File Managers.
-    ranger
-    yazi
-    # Terminal Emulators.
-    alacritty
-    # ZSH Packages
-    thefuck
-    oh-my-zsh
-  ];
+  # --- System-Wide Packages --- 
+  # Minimal set of essential command-line tools.
+  # Most user applications are installed via Home Manager.
+  environment = {
+    systemPackages = with pkgs; [
+      wget
+      git
+      alsa-utils # Audio utilities (alsamixer, etc.)
+    ];
+    shells = with pkgs; [ zsh ];
+  };
 
+  # --- Fonts --- 
+  # Install a selection of fonts for system use.
   fonts.packages = with pkgs; [
     noto-fonts
     noto-fonts-cjk-sans
@@ -199,81 +189,45 @@
     terminus_font
   ];
 
-  # System Shell Packages.
-  environment.shells = with pkgs; [
-    zsh
-  ];
-  
+  # --- System Programs --- 
+  # Utilities enabled system-wide.
   programs = {
-    # My Traceroute (MTR)
+    # Enable My Traceroute network diagnostic tool.
     mtr.enable = true;
-    # GNU Privacy Guard (GnuPG)
+    # Enable GnuPG agent for managing PGP keys (and SSH keys).
     gnupg.agent = {
       enable = true;
       enableSSHSupport = true;
     };
-    # Sway
-    sway = {
-      enable = true;
-      wrapperFeatures.gtk = true;
-      xwayland.enable = true;
-    };
-    hyprland = {
-      enable = true;
-      xwayland.enable = true;
-    };
-    zsh = {
-      enable = true;
-      ohMyZsh = {
-        enable = true;
-	      theme = "jonathan";
-	      plugins = [
-          "git"
-	        # "zsh-autosuggestions"
-	        # "zsh-syntax-highlighting"
-	      ];
-      };
-    };
+    # Hyprland is configured above in Graphics section.
   };
 
-  # Environment variables for Wayland
-  /* environment.sessionVariables = {
-    NIXOS_OZONE_WL = "1";
-    QT_QPA_PLATFORM = "wayland";
-    GDK_BACKEND = "wayland";
-  }; */
-
-  # Enable Nix Extra Features.
-  nix.settings = {
-    experimental-features = [ "nix-command" "flakes" ];
-  };
-
-  # List services that you want to enable:
+  # --- System Services --- 
   services = {
-    # Enable the OpenSSH daemon
+    # Enable the SSH daemon for remote access.
     openssh.enable = true;
+    # Enable Picom compositor (for i3 primarily).
     picom = {
       enable = true;
+      # Basic Picom settings (adjust as needed).
       settings = {
         inactive-opacity = 1;
         active-opacity = 1;
         inactive-opacity-override = true;
-        blur-backgroun = true;
-        blur-strenght = 1;
+        blur-background = true;
+        blur-strength = 1;
         opacity-rule = [];
       };
     };
-    # dbus.enable = true;
+    # Required for Wayland compositors like Hyprland.
     seatd.enable = true;
-    # Ollama
-    ollama.enable = true;
-    # Mullvad VPN
-    #  mullvad-vpn.enable = true;
+    # Ollama AI service (disabled - run manually when needed).
+    # ollama.enable = true;
+    # Mullvad VPN service (disabled).
+    # mullvad-vpn.enable = true;
   };
 
-  # NixOS Release for This Configuration.
-  # This value determines the NixOS release from which the default
-  # settings for stateful data, like file locations and database versions
-  # on the system were taken.
+  # --- System State --- 
+  # Pins the system state version to avoid unexpected breakages.
   system.stateVersion = "24.05";
 }
