@@ -22,7 +22,7 @@ This is a work in progress of my personal NixOS system configuration (Nix Flakes
 
 1. Clone this repository to `/etc/nixos/`:
    ```bash
-   sudo git clone https://github.com/your-username/nixos-flake.git /etc/nixos
+   git clone https://github.com/your-username/nixos-flake.git /etc/nixos
    ```
 
 2. Build and switch to the configuration:
