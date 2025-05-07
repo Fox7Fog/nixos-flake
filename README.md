@@ -1,6 +1,6 @@
 # NixOS Configuration
 
-My personal NixOS system configuration using the Nix Flakes feature.
+This is a work in progress of my personal NixOS system configuration (Nix Flakes + Home Manager) to help me rebuild my NixOS setup.
 
 ## System Overview
 
@@ -34,13 +34,13 @@ My personal NixOS system configuration using the Nix Flakes feature.
 
 - XFS root filesystem with FAT32 boot partition
 - PipeWire audio setup
-- Comprehensive font selection
+- Font selection
 - Security features enabled (firewall, polkit)
 - Development tools and utilities
 - System monitoring tools
 
 ## Notes
 
-- System state version: 24.05
+- System state version: 24.11
 - Home Manager state version: 24.11
 - Uses both stable (24.11) and unstable Nixpkgs
